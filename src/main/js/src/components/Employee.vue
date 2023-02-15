@@ -4,8 +4,8 @@ const props = defineProps<{employee: Employee;}>();
 
 <template>
     <tr>
-        <td>{{employee.firstName}}</td>
-        <td>{{employee.lastName}}</td>
-        <td>{{employee.description}}</td>
+        <td class="border border-zinc-600">{{employee.firstName}}</td>
+        <td class="border border-zinc-600">{{employee.lastName}}</td>
+        <td class="border border-zinc-600">{{employee.description}}</td>
     </tr>
 </template>
