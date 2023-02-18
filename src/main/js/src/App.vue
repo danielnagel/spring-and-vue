@@ -24,9 +24,20 @@ const loadFromServer = async (pageSize: number) => {
 
 }
 
+const updatePageSize = (pageSize: number): void => {
+    console.log("updatepagesoue", pageSize, state.value.pageSize)
+    if (pageSize !== state.value.pageSize) {
+        state.value.pageSize = pageSize;
+        loadFromServer(pageSize);
+    }
+}
+
 onMounted(async () => {
     await loadFromServer(state.value.pageSize);
 });
 </script>
 
-<template><EmployeeList :employees="state.employees"></EmployeeList></template>
+<template>
+    <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize">
+    </EmployeeList>
+</template>
