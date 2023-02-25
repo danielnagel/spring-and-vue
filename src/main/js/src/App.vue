@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, Ref } from "vue";
 import EmployeeList from "./components/EmployeeList.vue";
-import { Client, Link } from "ketting";
+import { Client, Link, Resource, State } from "ketting";
 
 const state: Ref<{ employees: Array<Employee>, pageSize: number, links: Link[], attributes: string[] }> = ref({ employees: [], pageSize: 2, links: [], attributes: [] });
 const root = "/api";
@@ -9,9 +9,7 @@ const client = new Client(root);
 
 const loadFromServer = async (pageSize: number) => {
     const employeesRes = await client.follow("employees", { size: pageSize });
-    const employeeCollection = await employeesRes.get();
-    state.value.employees = employeeCollection.getEmbedded().map(e => e.data);
-    state.value.links = employeeCollection.links.getAll();
+    let employeeCollection = await getEmployees(employeesRes);
     const employeeSchemaRes = client.go(employeeCollection.links.get("profile"));
     const employeeSchemaState = await employeeSchemaRes.get({
         headers: {
@@ -20,7 +18,6 @@ const loadFromServer = async (pageSize: number) => {
     });
     const schema = employeeSchemaState.data;
     state.value.attributes = Object.keys(schema.properties);
-
 }
 
 const updatePageSize = (pageSize: number): void => {
@@ -30,26 +27,29 @@ const updatePageSize = (pageSize: number): void => {
     }
 }
 
-const navigate = async (navUri: string) => {
-    // get rel and parameters
-    const relativeUriStartIndex = navUri.indexOf("employees");
-    const relativeUri = navUri.substring(relativeUriStartIndex);
-    const pageIndex = relativeUri.indexOf("page=");
-    const sizeIndex = relativeUri.indexOf("size=");
-    const rel = relativeUri.substring(0, pageIndex - 1);
-    const page = relativeUri.substring(pageIndex + 5, sizeIndex - 1);
-    const size = relativeUri.substring(sizeIndex + 5);
-
-    // navigate
-    const employeesRes = await client.follow(rel, {page, size});
-    const employeeCollection = await employeesRes.get();
+const getEmployees = async (res: Resource<any>): Promise<State<any>> => {
+    let employeeCollection = await res.get();
+    let embedded = employeeCollection.getEmbedded();
+    // disables caching, which doesn't work currently
+    if (embedded.length === 0) {
+        employeeCollection = await res.refresh();
+    }
     state.value.employees = employeeCollection.getEmbedded().map(e => e.data);
     state.value.links = employeeCollection.links.getAll();
+    return employeeCollection;
 }
 
+const navigate = async (navUri: string) => {
+    const employeesRes = client.go(navUri);
+    await getEmployees(employeesRes);
+}
+
+let lastDest = "";
 const handleNavigation = (dest: string) => {
-    for(const link of state.value.links) {
-        if(dest === link.rel) {
+    if (dest === lastDest && (dest === "first" || dest === "last")) return;
+    lastDest = dest;
+    for (const link of state.value.links) {
+        if (dest === link.rel) {
             navigate(link.href);
             return;
         }
@@ -62,6 +62,7 @@ onMounted(async () => {
 </script>
 
 <template>
-    <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize" @navigate="handleNavigation">
+    <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize"
+        @navigate="handleNavigation">
     </EmployeeList>
 </template>
