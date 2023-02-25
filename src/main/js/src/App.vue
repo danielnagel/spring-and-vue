@@ -4,11 +4,10 @@ import EmployeeList from "./components/EmployeeList.vue";
 import { Client, Link } from "ketting";
 
 const state: Ref<{ employees: Array<Employee>, pageSize: number, links: Link[], attributes: string[] }> = ref({ employees: [], pageSize: 2, links: [], attributes: [] });
+const root = "/api";
+const client = new Client(root);
 
 const loadFromServer = async (pageSize: number) => {
-
-    const root = "/api";
-    const client = new Client(root);
     const employeesRes = await client.follow("employees", { size: pageSize });
     const employeeCollection = await employeesRes.get();
     state.value.employees = employeeCollection.getEmbedded().map(e => e.data);
@@ -25,10 +24,35 @@ const loadFromServer = async (pageSize: number) => {
 }
 
 const updatePageSize = (pageSize: number): void => {
-    console.log("updatepagesoue", pageSize, state.value.pageSize)
     if (pageSize !== state.value.pageSize) {
         state.value.pageSize = pageSize;
         loadFromServer(pageSize);
+    }
+}
+
+const navigate = async (navUri: string) => {
+    // get rel and parameters
+    const relativeUriStartIndex = navUri.indexOf("employees");
+    const relativeUri = navUri.substring(relativeUriStartIndex);
+    const pageIndex = relativeUri.indexOf("page=");
+    const sizeIndex = relativeUri.indexOf("size=");
+    const rel = relativeUri.substring(0, pageIndex - 1);
+    const page = relativeUri.substring(pageIndex + 5, sizeIndex - 1);
+    const size = relativeUri.substring(sizeIndex + 5);
+
+    // navigate
+    const employeesRes = await client.follow(rel, {page, size});
+    const employeeCollection = await employeesRes.get();
+    state.value.employees = employeeCollection.getEmbedded().map(e => e.data);
+    state.value.links = employeeCollection.links.getAll();
+}
+
+const handleNavigation = (dest: string) => {
+    for(const link of state.value.links) {
+        if(dest === link.rel) {
+            navigate(link.href);
+            return;
+        }
     }
 }
 
@@ -38,6 +62,6 @@ onMounted(async () => {
 </script>
 
 <template>
-    <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize">
+    <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize" @navigate="handleNavigation">
     </EmployeeList>
 </template>

@@ -3,7 +3,8 @@ import { onMounted, ref } from 'vue';
 import Employee from './Employee.vue';
 const props = defineProps<{employees: Array<Employee>; pageSize: number}>();
 const emit = defineEmits<{
-	(e: "updatePageSize", pageSize: number): void
+	(e: "updatePageSize", pageSize: number): void,
+	(e: "navigate", location: string): void
 }>()
 
 const pageSizeRef = ref("");
@@ -44,4 +45,10 @@ onMounted(() => {
 			<Employee v-for="(e, index) of props.employees" :key="index" :employee="e"></Employee>
 		</tbody>
 	</table>
+	<div class="p-2 flex space-x-4 justify-center">
+		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3" @click="e => emit('navigate', 'first')">&lt;&lt;</button>
+		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3" @click="e => emit('navigate', 'prev')">&lt;</button>
+		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3" @click="e => emit('navigate', 'next')">&gt;</button>
+		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3" @click="e => emit('navigate', 'last')">&gt;&gt;</button>
+	</div>
 </template>
