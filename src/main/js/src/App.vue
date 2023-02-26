@@ -62,7 +62,11 @@ onMounted(async () => {
 </script>
 
 <template>
-    <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize"
-        @navigate="handleNavigation">
-    </EmployeeList>
+    <div class="w-full p-8 flex place-content-center">
+        <div class="w-1/2 flex flex-col">
+            <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize"
+                @navigate="handleNavigation">
+            </EmployeeList>
+        </div>
+    </div>
 </template>
