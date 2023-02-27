@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 type Employee = {
+    [key: string]: string;
     firstName: string;
     lastName: string;
     description: string;
