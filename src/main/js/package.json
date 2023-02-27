@@ -9,6 +9,7 @@
     "buildCss": "tailwindcss -i ./src/style.css -o ./dist/style.css",
     "build": "vue-tsc && vite build",
     "postbuild": "npm run buildCss && npm run copyCss",
+    "watch": "npm run build -- --watch",
     "copyCss": "cp ./dist/style.css ../resources/static/style.css",
     "preview": "vite preview",
     "check": "echo Checking frontend && npm run lint && npm run test",
