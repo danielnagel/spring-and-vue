@@ -8,6 +8,7 @@
     "devCss": "npm run buildCss -- --watch",
     "buildCss": "tailwindcss -i ./src/style.css -o ./dist/style.css",
     "build": "vue-tsc && vite build",
+    "build:dev": "npm run build -- --mode development",
     "postbuild": "npm run buildCss && npm run copyCss",
     "watch": "npm run build -- --watch",
     "copyCss": "cp ./dist/style.css ../resources/static/style.css",

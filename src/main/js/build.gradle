@@ -9,3 +9,9 @@ frontend {
     cleanScript = 'run clean'
     checkScript = 'run check'
 }
+
+import org.siouan.frontendgradleplugin.infrastructure.gradle.RunNpm
+
+tasks.register("devBuild", RunNpm) {
+    script = 'run build:dev'
+}
