@@ -35,7 +35,7 @@ const getEmployees = async (res: Resource<any>): Promise<State<any>> => {
     if (embedded.length === 0) {
         employeeCollection = await res.refresh();
     }
-    state.value.employees = employeeCollection.getEmbedded().map(e => e.data);
+    state.value.employees = employeeCollection.getEmbedded().map(e => ({...e.data, uri: e.uri}));
     state.value.links = employeeCollection.links.getAll();
     return employeeCollection;
 }
@@ -61,6 +61,13 @@ const handleNewEmployee = async (newEmployee: Employee): Promise<void> => {
     await handleNavigation("last");
 }
 
+const handleDeletion = async (employee: Employee): Promise<void> => {
+    if(typeof employee.uri === "undefined") return;
+    const employeeRes = client.go(employee.uri);
+    await employeeRes.delete();
+    await loadFromServer(state.value.pageSize);
+}
+
 onMounted(async () => {
     await loadFromServer(state.value.pageSize);
 });
@@ -69,8 +76,13 @@ onMounted(async () => {
 <template>
     <div class="w-full p-8 flex justify-center">
         <div class="w-1/2 flex flex-col">
-            <EmployeeList :employees="state.employees" :page-size="state.pageSize" @update-page-size="updatePageSize"
-                @navigate="handleNavigation">
+            <EmployeeList
+                :employees="state.employees"
+                :page-size="state.pageSize"
+                @update-page-size="updatePageSize"
+                @navigate="handleNavigation"
+                @delete-employee="handleDeletion"
+            >
             </EmployeeList>
         </div>
         <CreateForm :attributes="state.attributes" @submit="handleNewEmployee" class="ml-4" />

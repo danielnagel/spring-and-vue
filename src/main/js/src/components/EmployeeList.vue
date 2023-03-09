@@ -3,8 +3,9 @@ import { onMounted, ref } from 'vue';
 import Employee from './Employee.vue';
 const props = defineProps<{ employees: Array<Employee>; pageSize: number }>();
 const emit = defineEmits<{
-	(e: "updatePageSize", pageSize: number): void,
+	(e: "updatePageSize", pageSize: number): void
 	(e: "navigate", location: string): void
+    (e: "deleteEmployee", payload: Employee): void
 }>()
 
 const pageSizeRef = ref("");
@@ -21,7 +22,6 @@ const handleInput = (event: Event) => {
 		} catch (e: unknown) {
 			if (e instanceof Error)
 				console.error(`Could not update page size. Original message: ${e.message}`);
-			console.log(e);
 		}
 	}
 }
@@ -43,20 +43,26 @@ onMounted(() => {
 				<th class="border border-zinc-500 px-6 py-3">First Name</th>
 				<th class="border border-zinc-500 px-6 py-3">Last Name</th>
 				<th class="border border-zinc-500 px-6 py-3">Description</th>
+				<th class="border border-zinc-500 px-6 py-3"></th>
 			</tr>
 		</thead>
 		<tbody class="bg-zinc-800">
-			<Employee v-for="(e, index) of props.employees" :key="index" :employee="e"></Employee>
+			<Employee
+				v-for="(e, index) of props.employees"
+				:key="index"
+				:employee="e"
+				@delete-employee="emit('deleteEmployee', $event)"
+			></Employee>
 		</tbody>
 	</table>
 	<div class="p-4 flex space-x-4 justify-center">
 		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3"
-			@click="e => emit('navigate', 'first')">&lt;&lt;</button>
+			@click="emit('navigate', 'first')">&lt;&lt;</button>
 		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3"
-			@click="e => emit('navigate', 'prev')">&lt;</button>
+			@click="emit('navigate', 'prev')">&lt;</button>
 		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3"
-			@click="e => emit('navigate', 'next')">&gt;</button>
+			@click="emit('navigate', 'next')">&gt;</button>
 		<button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 px-3"
-			@click="e => emit('navigate', 'last')">&gt;&gt;</button>
+			@click="emit('navigate', 'last')">&gt;&gt;</button>
 	</div>
 </template>

@@ -5,6 +5,7 @@ type Employee = {
     firstName: string;
     lastName: string;
     description: string;
+    uri?: string;
 };
 
 type ApiGetRequest = {
