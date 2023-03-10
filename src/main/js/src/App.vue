@@ -3,8 +3,9 @@ import { onMounted, ref, Ref } from "vue";
 import EmployeeList from "./components/EmployeeList.vue";
 import { Client, Link, Resource, State } from "ketting";
 import CreateForm from "./components/CreateForm.vue";
+import Dialog from "./components/Dialog.vue";
 
-const state: Ref<{ employees: Array<Employee>, pageSize: number, links: Link[], attributes: string[] }> = ref({ employees: [], pageSize: 2, links: [], attributes: [] });
+const state: Ref<{ employees: Array<Employee>, pageSize: number, links: Link[], attributes: string[], showDialog: boolean }> = ref({ employees: [], pageSize: 2, links: [], attributes: [], showDialog: false });
 const root = "/api";
 const client = new Client(root);
 
@@ -35,7 +36,7 @@ const getEmployees = async (res: Resource<any>): Promise<State<any>> => {
     if (embedded.length === 0) {
         employeeCollection = await res.refresh();
     }
-    state.value.employees = employeeCollection.getEmbedded().map(e => ({...e.data, uri: e.uri}));
+    state.value.employees = employeeCollection.getEmbedded().map(e => ({ ...e.data, uri: e.uri }));
     state.value.links = employeeCollection.links.getAll();
     return employeeCollection;
 }
@@ -56,13 +57,14 @@ const handleNavigation = async (dest: string) => {
 
 const handleNewEmployee = async (newEmployee: Employee): Promise<void> => {
     const employeesRes = await client.follow("employees");
-    await employeesRes.post({data: newEmployee, headers: {"Content-Type": "application/json"}});
+    await employeesRes.post({ data: newEmployee, headers: { "Content-Type": "application/json" } });
     await loadFromServer(state.value.pageSize);
     await handleNavigation("last");
+    state.value.showDialog = false;
 }
 
 const handleDeletion = async (employee: Employee): Promise<void> => {
-    if(typeof employee.uri === "undefined") return;
+    if (typeof employee.uri === "undefined") return;
     const employeeRes = client.go(employee.uri);
     await employeeRes.delete();
     await loadFromServer(state.value.pageSize);
@@ -76,6 +78,9 @@ onMounted(async () => {
 <template>
     <div class="w-full p-8 flex justify-center">
         <div class="w-1/2 flex flex-col">
+            <button class="bg-zinc-500 hover:bg-zinc-700 text-zinc-200 p-1 m-1 w-44" @click="state.showDialog = !state.showDialog">
+                Create
+            </button>
             <EmployeeList
                 :employees="state.employees"
                 :page-size="state.pageSize"
@@ -85,6 +90,8 @@ onMounted(async () => {
             >
             </EmployeeList>
         </div>
-        <CreateForm :attributes="state.attributes" @submit="handleNewEmployee" class="ml-4" />
     </div>
+    <Dialog :show="state.showDialog" @close="state.showDialog = false">
+        <CreateForm :attributes="state.attributes" @submit="handleNewEmployee" />
+    </Dialog>
 </template>
